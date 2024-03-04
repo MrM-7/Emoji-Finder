@@ -6,7 +6,7 @@ Emoji Finder is a web application that allows users to search for emojis and dis
 
 ## Demo
 
-Explore the [Emoji Finder](https://linkedin-clone-5cd9f.web.app/).
+Explore the [Emoji Finder](https://emo-finder.netlify.app/).
 
 ## Features
 
