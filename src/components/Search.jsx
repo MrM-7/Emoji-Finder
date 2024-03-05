@@ -5,36 +5,55 @@ function Search() {
   const [input, setInput] = useState("");
   const [lists, setLists] = useState([]);
   const [error, setError] = useState(false)
+  const [abortController, setAbortController] = useState(null);
 
   const emojiFinder = async () => {
-    setError(false)
+    setError(false);
+    
+    // Create a new AbortController for each request
+    const controller = new AbortController();
+    setAbortController(controller);
 
     try {
-        if(input.length <= 1)   {
-            setLists([])
-            return;
-        }
+      if (input.length <= 1) {
+        setLists([]);
+        return;
+      }
 
-        const url = import.meta.env.VITE_EMOJI_URL + import.meta.env.VITE_EMOJI_KEY + `&search=${input}`;
+      const url =
+        import.meta.env.VITE_EMOJI_URL +
+        import.meta.env.VITE_EMOJI_KEY +
+        `&search=${input}`;
 
-        const response = await fetch(url);
-        const data = await response.json();
+      const response = await fetch(url, { signal: controller.signal });
+      const data = await response.json();
 
-        if(typeof data === 'object' &&
-        !Array.isArray(data) &&
-        data !== null){
-            setError(true)
-            return;
-        }
+      if (!Array.isArray(data)) {
+        setError(true);
+        return;
+      }
 
-        setLists(data); 
+      setLists(data);
     } catch (error) {
-        console.error("Error fetching emoji data:", error);
+      if (error.name === "AbortError") {
+        // Ignore errors caused by aborting previous requests
+        return;
+      }
+
+      console.error("Error fetching emoji data:", error);
     }
   };
 
   useEffect(() => {
     emojiFinder();
+
+    // Cleanup function to abort previous requests when input changes
+    return () => {
+      if (abortController) {
+        abortController.abort();
+        setAbortController(null);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input]);
 
